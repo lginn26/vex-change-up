@@ -125,8 +125,8 @@ void usercontrol(void) {
     // Local Drive Variables
     int joystick_y_axis = Controller1.Axis3.position(percent);
     int joystick_x_axis = Controller1.Axis4.position(percent);
-    int active_y_axis = joystick_y_axis > drive_sen && joystick_y_axis < -drive_sen;
-    int active_x_axis = joystick_x_axis > drive_sen && joystick_x_axis < -drive_sen;
+    int active_y_axis = joystick_y_axis > drive_sen || joystick_y_axis < -drive_sen;
+    int active_x_axis = joystick_x_axis > drive_sen || joystick_x_axis < -drive_sen;
 
     // The conditional sets drive motor velocities based on joystick positions
 
@@ -172,7 +172,7 @@ void usercontrol(void) {
     }
 
     // Spins all motors in their set direction while joysticks are in use.
-    if (active_y_axis && active_x_axis)
+    if (active_y_axis || active_x_axis)
     { 
       base_drive();
     }

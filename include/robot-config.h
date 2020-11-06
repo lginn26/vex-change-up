@@ -7,9 +7,10 @@ extern motor RFDriveMotor;
 extern motor LFDriveMotor;
 extern motor BRDriveMotor;
 extern motor BLDriveMotor;
-extern motor LeftIntakeMotor;
-extern motor RightIntakeMotor;
+extern motor LIntakeMotor;
+extern motor RIntakeMotor;
 extern controller Controller1;
+extern motor OutakeMotor;
 
 /**
  * Used to initialize code/tasks/devices added using tools in VEXcode Pro.

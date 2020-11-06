@@ -14,13 +14,22 @@
 // LFDriveMotor         motor         2               
 // BRDriveMotor         motor         3               
 // BLDriveMotor         motor         4               
-// LeftIntakeMotor      motor         8               
-// RightIntakeMotor     motor         9               
+// LIntakeMotor         motor         8               
+// RIntakeMotor         motor         9               
 // Controller1          controller                    
+// OutakeMotor          motor         10              
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
-// Program Variables
+/* Program Variables
+base_speed: The velocity which the base will move at by defalt.
+
+intake_speed: The speed at which the transport mechanism will spin.
+
+drive_sun: short for drive sensitivity. The variable will effect the degree which the analog sticks
+  need to be pressed to trigger motion.
+*/
 int base_speed = 75;
+int intake_speed = 100;
 double drive_sen = 50;
 
 #include "vex.h"
@@ -42,7 +51,7 @@ void set_drive(int rf, int lf, int br, int bl)
   BRDriveMotor.setVelocity(br * base_speed, percent);
   BLDriveMotor.setVelocity(bl * base_speed, percent);
 }
-
+  
 /*
 Spins all four drive motors in their set velocities.
 */
@@ -64,6 +73,29 @@ void halt_drive()
   BLDriveMotor.stop();
 }
 
+/*
+Spins all motors on the intake and outake
+*/
+
+void intake_spin()
+{
+  LIntakeMotor.setVelocity(intake_speed, percent);
+  RIntakeMotor.setVelocity(intake_speed, percent);
+  OutakeMotor.setVelocity(intake_speed, percent);
+
+  LIntakeMotor.spin(forward);
+  RIntakeMotor.spin(reverse);
+  OutakeMotor.spin(reverse);
+}
+/*
+Stops the intake motors
+*/
+void halt_intake()
+{
+  LIntakeMotor.stop();
+  RIntakeMotor.stop();
+  OutakeMotor.stop();
+}
 using namespace vex;
 
 // A global instance of competition
@@ -125,6 +157,9 @@ void usercontrol(void) {
     // Local Drive Variables
     int joystick_y_axis = Controller1.Axis3.position(percent);
     int joystick_x_axis = Controller1.Axis4.position(percent);
+    int turn_axis = Controller1.Axis1.position(percent);
+    bool intake_button = Controller1.ButtonR1.pressing();
+
     int active_y_axis = joystick_y_axis > drive_sen || joystick_y_axis < -drive_sen;
     int active_x_axis = joystick_x_axis > drive_sen || joystick_x_axis < -drive_sen;
 
@@ -171,6 +206,18 @@ void usercontrol(void) {
       set_drive(-1, 1, -1, 1);
     }
 
+    // The conditional is responcible for turning the robot when needed.
+    if (turn_axis > 0)
+    {
+      // turn right
+      set_drive(-1, 1, -1, 1);
+    }
+    else if (turn_axis < 0)
+    {
+      // turn left
+      set_drive(1, -1, 1, -1);
+    }
+
     // Spins all motors in their set direction while joysticks are in use.
     if (active_y_axis || active_x_axis)
     { 
@@ -181,6 +228,16 @@ void usercontrol(void) {
       halt_drive();
     }
 
+    // Spins intake motors while right trigger is pressed.
+    if (intake_button)
+    {
+      intake_spin();
+    }
+    else
+    {
+      halt_intake();
+    }
+      
     wait(20, msec); // Sleep the task for a short amount of time to
                     // prevent wasted resources.
   }

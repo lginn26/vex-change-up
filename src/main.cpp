@@ -21,7 +21,7 @@
 
 // Program Variables
 int base_speed = 75;
-double drive_sen = .5;
+double drive_sen = 50;
 
 #include "vex.h"
 
@@ -43,12 +43,25 @@ void set_drive(int rf, int lf, int br, int bl)
   BLDriveMotor.setVelocity(bl * base_speed, percent);
 }
 
+/*
+Spins all four drive motors in their set velocities.
+*/
 void base_drive()
 {
   RFDriveMotor.spin(forward);
   LFDriveMotor.spin(forward);
   BRDriveMotor.spin(forward);
   BLDriveMotor.spin(forward);
+}
+/*
+Stops all four drive motors.
+*/
+void halt_drive()
+{
+  RFDriveMotor.stop();
+  LFDriveMotor.stop();
+  BRDriveMotor.stop();
+  BLDriveMotor.stop();
 }
 
 using namespace vex;
@@ -110,20 +123,37 @@ void usercontrol(void) {
     // values based on feedback from the joysticks.
 
     // Local Drive Variables
-    int joystick_y_axis = Controller1.Axis3.value();
-    int joystick_x_axis = Controller1.Axis4.value();
+    int joystick_y_axis = Controller1.Axis3.position(percent);
+    int joystick_x_axis = Controller1.Axis4.position(percent);
+    int active_y_axis = joystick_y_axis > drive_sen && joystick_y_axis < -drive_sen;
+    int active_x_axis = joystick_x_axis > drive_sen && joystick_x_axis < -drive_sen;
 
     // The conditional sets drive motor velocities based on joystick positions
 
-    if (joystick_y_axis >= drive_sen)
+    if ((joystick_y_axis >= drive_sen) && (joystick_x_axis >= drive_sen))
+    {
+      // drive northeast
+      set_drive(0, 1, -1, 0);
+    }
+    else if ((joystick_y_axis <= -drive_sen) && (joystick_x_axis >= drive_sen))
+    {
+      // drive southeast
+      set_drive(-1, 0, 0, 1);
+    }
+    else if ((joystick_y_axis <= -drive_sen) && (joystick_x_axis <= -drive_sen))
+    {
+      // drive southwest
+      set_drive(0, -1, 1, 0);
+    }
+    else if ((joystick_y_axis >= drive_sen) && (joystick_x_axis <= -drive_sen))
+    {
+      // drive northwest
+      set_drive(1, 0, 0, -1);
+    }
+    else if (joystick_y_axis >= drive_sen)
     {
       // drive north
       set_drive(1, 1, -1, -1);
-    }
-    else if (((joystick_y_axis > 0) && (joystick_y_axis < drive_sen)) && ((joystick_x_axis > 0) && (joystick_x_axis < drive_sen)))
-    {
-      // drive northeast
-      set_drive(0, 1, 0, -1);
     }
     else if (joystick_x_axis >= drive_sen)
     {
@@ -141,7 +171,15 @@ void usercontrol(void) {
       set_drive(-1, 1, -1, 1);
     }
 
-    base_drive();
+    // Spins all motors in their set direction while joysticks are in use.
+    if (active_y_axis && active_x_axis)
+    { 
+      base_drive();
+    }
+    else
+    {
+      halt_drive();
+    }
 
     wait(20, msec); // Sleep the task for a short amount of time to
                     // prevent wasted resources.

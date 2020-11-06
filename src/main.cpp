@@ -158,8 +158,8 @@ void usercontrol(void) {
     int joystick_y_axis = Controller1.Axis3.position(percent);
     int joystick_x_axis = Controller1.Axis4.position(percent);
     int turn_axis = Controller1.Axis1.position(percent);
-    bool intake_button = Controller1.ButtonR1.pressing();
 
+    bool intake_button = Controller1.ButtonR1.pressing();
     bool active_y_axis = (joystick_y_axis > drive_sen) || (joystick_y_axis < -drive_sen);
     bool active_x_axis = (joystick_x_axis > drive_sen) || (joystick_x_axis < -drive_sen);
     bool active_turn_axis = turn_axis != 0;

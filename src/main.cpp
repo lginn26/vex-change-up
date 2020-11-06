@@ -1,8 +1,8 @@
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /*    Module:       main.cpp                                                  */
-/*    Author:       VEX                                                       */
-/*    Created:      Thu Sep 26 2019                                           */
+/*    Author:       Mann Made 3796A                                           */
+/*    Created:      Fri 11/6/2020                                             */
 /*    Description:  Competition Template                                      */
 /*                                                                            */
 /*----------------------------------------------------------------------------*/
@@ -62,6 +62,7 @@ void base_drive()
   BRDriveMotor.spin(forward);
   BLDriveMotor.spin(forward);
 }
+
 /*
 Stops all four drive motors.
 */
@@ -76,7 +77,6 @@ void halt_drive()
 /*
 Spins all motors on the intake and outake
 */
-
 void intake_spin()
 {
   LIntakeMotor.setVelocity(intake_speed, percent);
@@ -160,10 +160,12 @@ void usercontrol(void) {
     int turn_axis = Controller1.Axis1.position(percent);
     bool intake_button = Controller1.ButtonR1.pressing();
 
-    int active_y_axis = joystick_y_axis > drive_sen || joystick_y_axis < -drive_sen;
-    int active_x_axis = joystick_x_axis > drive_sen || joystick_x_axis < -drive_sen;
+    bool active_y_axis = (joystick_y_axis > drive_sen) || (joystick_y_axis < -drive_sen);
+    bool active_x_axis = (joystick_x_axis > drive_sen) || (joystick_x_axis < -drive_sen);
+    bool active_turn_axis = turn_axis != 0;
 
-    // The conditional sets drive motor velocities based on joystick positions
+    // The conditional sets drive motor velocities based on joystick positions.
+    // It is not responcible for driving the motors
 
     if ((joystick_y_axis >= drive_sen) && (joystick_x_axis >= drive_sen))
     {
@@ -206,7 +208,7 @@ void usercontrol(void) {
       set_drive(-1, 1, -1, 1);
     }
 
-    // The conditional is responcible for turning the robot when needed.
+    // The conditional is responcible for setting drive motor velocities when needed.
     if (turn_axis > 0)
     {
       // turn right

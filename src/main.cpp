@@ -221,7 +221,7 @@ void usercontrol(void) {
     }
 
     // Spins all motors in their set direction while joysticks are in use.
-    if (active_y_axis || active_x_axis)
+    if (active_y_axis || active_x_axis || active_turn_axis)
     { 
       base_drive();
     }

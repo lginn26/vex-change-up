@@ -28,50 +28,33 @@ intake_speed: The speed at which the transport mechanism will spin.
 drive_sun: short for drive sensitivity. The variable will effect the degree which the analog sticks
   need to be pressed to trigger motion.
 */
-int base_speed = 75;
+
 int intake_speed = 100;
-double drive_sen = 50;
 
 #include "vex.h"
 
 // Helper Functions
 
 /*
-Sets the velocity of each of the four drive motors 
+Sets the velocity of each of the four drive motors and spins them.
 @param rf the modifying value for RFDriveMotor velocity  
 @param lf the modifying value for LFDriveMotor velocity
 @param br the modifying value for BRDriveMotor velocity
 @param bl the modifying value for BLDriveMotor velocity
 @return none
 */
-void set_drive(int rf, int lf, int br, int bl)
+
+void base_drive(int rf, int lf, int br, int bl)
 {
-  RFDriveMotor.setVelocity(rf * base_speed, percent);
-  LFDriveMotor.setVelocity(lf * base_speed, percent);
-  BRDriveMotor.setVelocity(br * base_speed, percent);
-  BLDriveMotor.setVelocity(bl * base_speed, percent);
-}
-  
-/*
-Spins all four drive motors in their set velocities.
-*/
-void base_drive()
-{
+  RFDriveMotor.setVelocity(rf, percent);
+  LFDriveMotor.setVelocity(lf, percent);
+  BRDriveMotor.setVelocity(br, percent);
+  BLDriveMotor.setVelocity(bl, percent);
+
   RFDriveMotor.spin(forward);
   LFDriveMotor.spin(forward);
   BRDriveMotor.spin(forward);
   BLDriveMotor.spin(forward);
-}
-
-/*
-Stops all four drive motors.
-*/
-void halt_drive()
-{
-  RFDriveMotor.stop();
-  LFDriveMotor.stop();
-  BRDriveMotor.stop();
-  BLDriveMotor.stop();
 }
 
 /*
@@ -159,10 +142,24 @@ void usercontrol(void) {
     int joystick_x_axis = Controller1.Axis4.position(percent);
     int turn_axis = Controller1.Axis1.position(percent);
 
+    int RF_velocity = joystick_y_axis - joystick_x_axis;
+    int LF_velocity = joystick_y_axis + joystick_x_axis;
+    int BR_velocity = joystick_x_axis - joystick_y_axis;
+    int BL_velocity = joystick_x_axis + joystick_y_axis;
+
     bool intake_button = Controller1.ButtonR1.pressing();
-    bool active_y_axis = (joystick_y_axis > drive_sen) || (joystick_y_axis < -drive_sen);
-    bool active_x_axis = (joystick_x_axis > drive_sen) || (joystick_x_axis < -drive_sen);
-    bool active_turn_axis = turn_axis != 0;
+
+    // Spins the drive motors to move.
+    // While the right joystick is not in use the base will drive in an eight directional path.
+    // Whle the right joystick is in use all motors will turn to rotate the robot in place.
+    if (turn_axis != 0)
+    {
+      base_drive(RF_velocity, LF_velocity, BR_velocity, BL_velocity);
+    }
+    else 
+    {
+      base_drive(turn_axis, turn_axis, turn_axis, turn_axis);
+    }
 
     // Spins intake motors while right trigger is pressed.
     if (intake_button)

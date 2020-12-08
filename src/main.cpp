@@ -1,3 +1,4 @@
+// ---- START VEXCODE CONFIGURED DEVICES ----//
 /*----------------------------------------------------------------------------*/
 /*                                                                            */
 /*    Module:       main.cpp                                                  */
@@ -20,7 +21,9 @@
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
 /* Program Variables
-base_speed: The velocity which the base will move at by defalt.
+base_speed_mod: A percentage that will limit the max speed of the drive.
+
+turn_speed_mod: A percentage that will limit the max speed of the left analog turn.
 
 intake_speed: The speed at which the transport mechanism will spin.
 
@@ -30,6 +33,7 @@ drive_sun: short for drive sensitivity. The variable will effect the degree whic
 
 int intake_speed = 100;
 double base_speed_mod = .75;
+double turn_speed_mod = .75;
 
 #include "vex.h"
 
@@ -46,10 +50,10 @@ Sets the velocity of each of the four drive motors and spins them.
 
 void base_drive(int rf, int lf, int br, int bl)
 {
-  right_front_motor.setVelocity(rf, percent);
+  right_front_motor.setVelocity(rf * base_speed_mod, percent);
   left_front_motor.setVelocity(lf * base_speed_mod, percent);
   right_rear_motor.setVelocity(br * base_speed_mod, percent);
-  left_rear_motor.setVelocity(bl, percent);
+  left_rear_motor.setVelocity(bl * base_speed_mod, percent);
 
   right_front_motor.spin(forward);
   left_front_motor.spin(forward);
@@ -57,25 +61,6 @@ void base_drive(int rf, int lf, int br, int bl)
   left_rear_motor.spin(forward);
 }
 
-/*
-Spins all motors on the intake and outake
-*/
-void intake_spin()
-{
-  right_intake_motor.setVelocity(intake_speed, percent);
-  right_intake_motor.setVelocity(-intake_speed, percent);
-
-  right_intake_motor.spin(forward);
-  left_intake_motor.spin(forward);
-}
-/*
-Stops the intake motors
-*/
-void halt_intake()
-{
-  right_intake_motor.stop();
-  left_intake_motor.stop();
-}
 using namespace vex;
 
 // A global instance of competition
@@ -139,10 +124,10 @@ void usercontrol(void) {
     int intake_button = Controller1.ButtonR1.pressing();
 
     // Sets velocity of all four drive motors based on the position of the joysticks.
-    int right_front_velocity = -joystick_y_axis + joystick_x_axis;
-    int left_front_velocity = joystick_y_axis + joystick_x_axis;
-    int right_rear_velocity = -joystick_y_axis + joystick_x_axis;
-    int left_rear_velocity = joystick_y_axis + joystick_x_axis;
+    int right_front_velocity = -joystick_y_axis + (joystick_x_axis * turn_speed_mod) - turn_axis;
+    int left_front_velocity = joystick_y_axis + (joystick_x_axis * turn_speed_mod) + turn_axis;
+    int right_rear_velocity = -joystick_y_axis + (joystick_x_axis * turn_speed_mod) - turn_axis;
+    int left_rear_velocity = joystick_y_axis + (joystick_x_axis * turn_speed_mod) + turn_axis;
 
     // Spins the drive motors to move.
     // While the right joystick is not in use the base will drive in an eight directional path.

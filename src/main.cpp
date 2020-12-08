@@ -10,14 +10,13 @@
 // ---- START VEXCODE CONFIGURED DEVICES ----
 // Robot Configuration:
 // [Name]               [Type]        [Port(s)]
-// RFDriveMotor         motor         1               
-// LFDriveMotor         motor         2               
-// BRDriveMotor         motor         3               
-// BLDriveMotor         motor         4               
-// LIntakeMotor         motor         8               
-// RIntakeMotor         motor         9               
 // Controller1          controller                    
-// OutakeMotor          motor         10              
+// right_front_motor    motor         10              
+// left_front_motor     motor         12              
+// left_rear_motor      motor         6               
+// right_rear_motor     motor         9               
+// left_intake_motor    motor         13              
+// right_intake_motor   motor         14              
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
 /* Program Variables
@@ -30,6 +29,7 @@ drive_sun: short for drive sensitivity. The variable will effect the degree whic
 */
 
 int intake_speed = 100;
+double base_speed_mod = .75;
 
 #include "vex.h"
 
@@ -37,24 +37,24 @@ int intake_speed = 100;
 
 /*
 Sets the velocity of each of the four drive motors and spins them.
-@param rf the modifying value for RFDriveMotor velocity  
-@param lf the modifying value for LFDriveMotor velocity
-@param br the modifying value for BRDriveMotor velocity
-@param bl the modifying value for BLDriveMotor velocity
+@param rf the modifying value for right_front_motor velocity  
+@param lf the modifying value for left_front_motor velocity
+@param br the modifying value for right_rear_motor velocity
+@param bl the modifying value for left_rear_motor velocity
 @return none
 */
 
 void base_drive(int rf, int lf, int br, int bl)
 {
-  RFDriveMotor.setVelocity(rf, percent);
-  LFDriveMotor.setVelocity(lf, percent);
-  BRDriveMotor.setVelocity(br, percent);
-  BLDriveMotor.setVelocity(bl, percent);
+  right_front_motor.setVelocity(rf, percent);
+  left_front_motor.setVelocity(lf * base_speed_mod, percent);
+  right_rear_motor.setVelocity(br * base_speed_mod, percent);
+  left_rear_motor.setVelocity(bl, percent);
 
-  RFDriveMotor.spin(forward);
-  LFDriveMotor.spin(forward);
-  BRDriveMotor.spin(forward);
-  BLDriveMotor.spin(forward);
+  right_front_motor.spin(forward);
+  left_front_motor.spin(forward);
+  right_rear_motor.spin(forward);
+  left_rear_motor.spin(forward);
 }
 
 /*
@@ -62,22 +62,19 @@ Spins all motors on the intake and outake
 */
 void intake_spin()
 {
-  LIntakeMotor.setVelocity(intake_speed, percent);
-  RIntakeMotor.setVelocity(intake_speed, percent);
-  OutakeMotor.setVelocity(intake_speed, percent);
+  right_intake_motor.setVelocity(intake_speed, percent);
+  right_intake_motor.setVelocity(-intake_speed, percent);
 
-  LIntakeMotor.spin(forward);
-  RIntakeMotor.spin(reverse);
-  OutakeMotor.spin(reverse);
+  right_intake_motor.spin(forward);
+  left_intake_motor.spin(forward);
 }
 /*
 Stops the intake motors
 */
 void halt_intake()
 {
-  LIntakeMotor.stop();
-  RIntakeMotor.stop();
-  OutakeMotor.stop();
+  right_intake_motor.stop();
+  left_intake_motor.stop();
 }
 using namespace vex;
 
@@ -115,9 +112,7 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  // ..........................................................................
-  // Insert autonomous user code here.
-  // ..........................................................................
+  
 }
 
 /*---------------------------------------------------------------------------*/
@@ -141,37 +136,28 @@ void usercontrol(void) {
     int joystick_y_axis = Controller1.Axis3.position(percent);
     int joystick_x_axis = Controller1.Axis4.position(percent);
     int turn_axis = Controller1.Axis1.position(percent);
+    int intake_button = Controller1.ButtonR1.pressing();
 
-    int RF_velocity = joystick_y_axis - joystick_x_axis;
-    int LF_velocity = joystick_y_axis + joystick_x_axis;
-    int BR_velocity = joystick_x_axis - joystick_y_axis;
-    int BL_velocity = joystick_x_axis + joystick_y_axis;
-
-    bool intake_button = Controller1.ButtonR1.pressing();
+    // Sets velocity of all four drive motors based on the position of the joysticks.
+    int right_front_velocity = -joystick_y_axis + joystick_x_axis;
+    int left_front_velocity = joystick_y_axis + joystick_x_axis;
+    int right_rear_velocity = -joystick_y_axis + joystick_x_axis;
+    int left_rear_velocity = joystick_y_axis + joystick_x_axis;
 
     // Spins the drive motors to move.
     // While the right joystick is not in use the base will drive in an eight directional path.
     // Whle the right joystick is in use all motors will turn to rotate the robot in place.
-    if (turn_axis != 0)
-    {
-      base_drive(RF_velocity, LF_velocity, BR_velocity, BL_velocity);
-    }
-    else 
-    {
-      base_drive(turn_axis, turn_axis, turn_axis, turn_axis);
-    }
+
+    base_drive(right_front_velocity, left_front_velocity, right_rear_velocity, left_rear_velocity);
 
     // Spins intake motors while right trigger is pressed.
-    if (intake_button)
-    {
-      intake_spin();
-    }
-    else
-    {
-      halt_intake();
-    }
+    left_intake_motor.setVelocity(intake_speed * intake_button, percent);
+    right_intake_motor.setVelocity(intake_speed * intake_button, percent);
+    
+    left_intake_motor.spin(forward);
+    right_intake_motor.spin(reverse);
       
-    wait(20, msec); // Sleep the task for a short amount of time to
+     // Sleep the task for a short amount of time to
                     // prevent wasted resources.
   }
 }

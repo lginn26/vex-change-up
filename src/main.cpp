@@ -11,13 +11,14 @@
 // ---- START VEXCODE CONFIGURED DEVICES ----
 // Robot Configuration:
 // [Name]               [Type]        [Port(s)]
-// Controller1          controller                    
 // right_front_motor    motor         10              
 // left_front_motor     motor         12              
 // left_rear_motor      motor         6               
-// right_rear_motor     motor         9               
+// right_rear_motor     motor         16              
 // left_intake_motor    motor         13              
 // right_intake_motor   motor         14              
+// Controller1          controller                    
+// outake_motor         motor         17              
 // ---- END VEXCODE CONFIGURED DEVICES ----
 
 /* Program Variables
@@ -135,15 +136,17 @@ void usercontrol(void) {
 
     base_drive(right_front_velocity, left_front_velocity, right_rear_velocity, left_rear_velocity);
 
-    // Spins intake motors while right trigger is pressed.
+    // Spins intake and outake motors while right trigger is pressed.
     left_intake_motor.setVelocity(intake_speed * intake_button, percent);
-    right_intake_motor.setVelocity(intake_speed * intake_button, percent);
-    
+    right_intake_motor.setVelocity(-intake_speed * intake_button, percent);
+    outake_motor.setVelocity(-intake_speed * intake_button, percent);
+
     left_intake_motor.spin(forward);
-    right_intake_motor.spin(reverse);
+    right_intake_motor.spin(forward);
+    outake_motor.spin(forward);
       
-     // Sleep the task for a short amount of time to
-                    // prevent wasted resources.
+    // Sleep the task for a short amount of time to
+    // prevent wasted resources.
   }
 }
 

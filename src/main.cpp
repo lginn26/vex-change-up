@@ -123,6 +123,9 @@ void usercontrol(void) {
     int joystick_x_axis = Controller1.Axis4.position(percent);
     int turn_axis = Controller1.Axis1.position(percent);
     int intake_button = Controller1.ButtonR1.pressing();
+    int outake_button = Controller1.ButtonR2.pressing();
+    int rev_intake_button = Controller1.ButtonL1.pressing();
+    int rev_outake_button = Controller1.ButtonL2.pressing();
 
     // Sets velocity of all four drive motors based on the position of the joysticks.
     int right_front_velocity = -joystick_y_axis + (joystick_x_axis * turn_speed_mod) - turn_axis;
@@ -136,11 +139,16 @@ void usercontrol(void) {
 
     base_drive(right_front_velocity, left_front_velocity, right_rear_velocity, left_rear_velocity);
 
-    // Spins intake and outake motors while right trigger is pressed.
-    left_intake_motor.setVelocity(intake_speed * intake_button, percent);
-    right_intake_motor.setVelocity(-intake_speed * intake_button, percent);
-    outake_motor.setVelocity(-intake_speed * intake_button, percent);
+    // Sets the velocity and direction of the Intake motors.
+    // Right buttons will spin the intakes inwards.
+    // Left button will spin the intakes in reverse.
+    left_intake_motor.setVelocity((intake_speed * intake_button) + (rev_intake_button * -intake_button), percent);
+    right_intake_motor.setVelocity((-intake_speed * intake_button) + (rev_intake_button * intake_button), percent);
 
+    // Sets the velocity of the Outake motors.
+    outake_motor.setVelocity((-intake_speed * outake_button) + (intake_speed * rev_outake_button), percent);
+
+    // Spins both intake and outake motors. Both spin independently of one another.
     left_intake_motor.spin(forward);
     right_intake_motor.spin(forward);
     outake_motor.spin(forward);

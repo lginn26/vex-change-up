@@ -28,17 +28,29 @@ turn_speed_mod: A percentage that will limit the max speed of the left analog tu
 
 intake_speed: The speed at which the transport mechanism will spin.
 
-drive_sun: short for drive sensitivity. The variable will effect the degree which the analog sticks
-  need to be pressed to trigger motion.
+auton_base_drive: The speed that the robot will drive during autonomus period.
+
+auton_mode: An integer that indicates the autonmus to preform.
+
 */
 
 int intake_speed = 100;
+int auton_base_drive = 75;
+
 double base_speed_mod = .75;
 double turn_speed_mod = .75;
 
+/*
+Auton Modes:
+0 : Starts back parralell with colored tile facing away from the right goal. Scores center goal on team side.
+1 : Starts front parralell with colored tile facing twaords the right goal. Scores the right goal on team side.
+*/
+
+int auton_mode = 0;
+
 #include "vex.h"
 
-// Helper Functions
+// Driver Functions
 
 /*
 Sets the velocity of each of the four drive motors and spins them.
@@ -60,6 +72,47 @@ void base_drive(int rf, int lf, int br, int bl)
   left_front_motor.spin(forward);
   right_rear_motor.spin(forward);
   left_rear_motor.spin(forward);
+}
+
+// Auton Functions
+/**
+Drives the robot in a line for a given number of seconds.
+
+@param speed the percent unit of power to feed each drive motor. Positive values will drive foward and negative values back.
+@param time the number of seconds to spin drive motors.
+*/
+void auton_drive(double speed, double time)
+{
+  base_drive(-speed, speed, -speed, speed);
+  
+  wait(time, seconds);
+
+  right_front_motor.stop();
+  left_front_motor.stop();
+  right_rear_motor.stop();
+  left_rear_motor.stop();
+}
+
+/**
+Spins both outakes and intakes for a specified number of seconds.
+
+@param time the number of seconds to spin intake/outake motors.
+*/
+void auton_intake_outake_spin(double time)
+{
+  right_intake_motor.setVelocity(-intake_speed, percent);
+  left_intake_motor.setVelocity(intake_speed, percent);
+  outake_motor.setVelocity(-intake_speed, percent);
+
+  right_intake_motor.spin(forward);
+  left_intake_motor.spin(forward);
+  outake_motor.spin(forward);
+
+  wait(time, seconds);
+
+  right_intake_motor.stop();
+  left_intake_motor.stop();
+  outake_motor.stop();
 }
 
 using namespace vex;
@@ -98,7 +151,16 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  
+  // drive foward enough to flip the hood
+  auton_drive(auton_base_drive, .5);
+
+  // spin both outake and intake to push preload into the center of the outake
+  auton_intake_outake_spin(.25);
+  // drive to the goal
+  auton_drive(auton_base_drive, 1);
+
+  // spin outake to score the ball.
+  auton_intake_outake_spin(1);
 }
 
 /*---------------------------------------------------------------------------*/
@@ -122,10 +184,10 @@ void usercontrol(void) {
     int joystick_y_axis = Controller1.Axis3.position(percent);
     int joystick_x_axis = Controller1.Axis4.position(percent);
     int turn_axis = Controller1.Axis1.position(percent);
-    int intake_button = Controller1.ButtonR1.pressing();
-    int outake_button = Controller1.ButtonR2.pressing();
-    int rev_intake_button = Controller1.ButtonL1.pressing();
-    int rev_outake_button = Controller1.ButtonL2.pressing();
+    int intake_button = Controller1.ButtonR2.pressing();
+    int outake_button = Controller1.ButtonR1.pressing();
+    int rev_intake_button = Controller1.ButtonL2.pressing();
+    int rev_outake_button = Controller1.ButtonL1.pressing();
 
     // Sets velocity of all four drive motors based on the position of the joysticks.
     int right_front_velocity = -joystick_y_axis + (joystick_x_axis * turn_speed_mod) - turn_axis;
@@ -142,8 +204,8 @@ void usercontrol(void) {
     // Sets the velocity and direction of the Intake motors.
     // Right buttons will spin the intakes inwards.
     // Left button will spin the intakes in reverse.
-    left_intake_motor.setVelocity((intake_speed * intake_button) + (rev_intake_button * -intake_button), percent);
-    right_intake_motor.setVelocity((-intake_speed * intake_button) + (rev_intake_button * intake_button), percent);
+    left_intake_motor.setVelocity((intake_speed * intake_button) + (rev_intake_button * -intake_speed), percent);
+    right_intake_motor.setVelocity((-intake_speed * intake_button) + (rev_intake_button * intake_speed), percent);
 
     // Sets the velocity of the Outake motors.
     outake_motor.setVelocity((-intake_speed * outake_button) + (intake_speed * rev_outake_button), percent);
